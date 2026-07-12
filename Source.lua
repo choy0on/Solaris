@@ -801,11 +801,6 @@ function SolarisLib:New(Config)
                 Button.Name = text .. "element"
                 Button.ButtonText.Text = text
                 Button.ClipsDescendants = true
-
-				function Button:Set(value)
-					Button.Name = value .. "element"
-					Button.ButtonText.Text = value
-				end
                 
                 Button.MouseButton1Click:Connect(function()
                     callback()
