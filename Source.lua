@@ -1148,6 +1148,7 @@ function SolarisLib:New(Config)
                 local Label, LabelFrame = {}, game:GetObjects("rbxassetid://7032552322")[1]
                 LabelFrame.Parent = Section
                 LabelFrame.Title.Text = text
+				LabelFrame.Title.RichText = true
                 LabelFrame.Name = text .. "element"
 
                 function Label:Set(tochange)
