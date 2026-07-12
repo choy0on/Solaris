@@ -1,5 +1,3 @@
-[![discord server](https://cdn.discordapp.com/attachments/832371927740973078/1146320361261117480/solaris2.png)](https://discord.gg/jaunk8nhN5)
-
 # SolarisLib
 Solaris Library is a free and open sourced Roblox Ui Library
 ## SolarisLib script (don't use loadstring because it is bugged apparently!) obviously you have to enter the link, if you only put the raw link it will not work for you at all
