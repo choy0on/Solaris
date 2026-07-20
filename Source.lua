@@ -681,6 +681,525 @@ function SolarisLib:New(Config)
 	        end
 	    end)
 	end
+
+	function SettingsConstructor()
+	    local Settings = {}
+	
+	    local SettingsFrame =
+	        game:GetObjects("rbxassetid://7167491516")[1]
+	
+	    local TabPreset =
+	        game:GetObjects("rbxassetid://7177524915")[1]
+	
+	    local ContainerPreset =
+	        game:GetObjects("rbxassetid://7203599409")[1]
+	
+	    local TogglePreset =
+	        game:GetObjects("rbxassetid://7208643984")[1]
+	
+	    local BindPreset =
+	        game:GetObjects("rbxassetid://7219277948")[1]
+	
+	    local DropdownPreset =
+	        game:GetObjects("rbxassetid://7435055269")[1]
+	
+	    local OptionPreset =
+	        game:GetObjects("rbxassetid://7435032496")[1]
+	
+	    local firstTab = true
+	    local SFrame = SettingsFrame.Main
+	
+	    SettingsFrame.Parent = MFrame
+	
+	    SFrame.TopBar.CloseBtn.MouseEnter:Connect(function()
+	        TweenService:Create(
+	            SFrame.TopBar.CloseBtn.Ico,
+	            TweenInfo.new(
+	                0.15,
+	                Enum.EasingStyle.Quad,
+	                Enum.EasingDirection.Out
+	            ),
+	            {ImageTransparency = 0}
+	        ):Play()
+	    end)
+	
+	    SFrame.TopBar.CloseBtn.MouseLeave:Connect(function()
+	        TweenService:Create(
+	            SFrame.TopBar.CloseBtn.Ico,
+	            TweenInfo.new(
+	                0.15,
+	                Enum.EasingStyle.Quad,
+	                Enum.EasingDirection.Out
+	            ),
+	            {ImageTransparency = 0.4}
+	        ):Play()
+	    end)
+	
+	    SettingsBtn.MouseButton1Click:Connect(function()
+	        SettingsFrame.Visible =
+	            not SettingsFrame.Visible
+	
+	        MFrame.TopBar.ButtonHolder.MenuBtn
+	            .MenuFrame.Visible = false
+	    end)
+	
+	    SFrame.TopBar.CloseBtn.MouseButton1Click:Connect(function()
+	        SettingsFrame.Visible = false
+	    end)
+	
+	    local function SaveSettings()
+	        local content = {}
+	
+	        for key, value in pairs(SolarisLib.Settings) do
+	            content[key] = value
+	        end
+	
+	        writefile(
+	            Config.FolderToSave .. "/settings.txt",
+	            http:JSONEncode(content)
+	        )
+	    end
+	
+	    task.spawn(function()
+	        while SettingsFrame.Parent do
+	            task.wait(0.1)
+	
+	            local theme =
+	                SolarisLib.Themes[
+	                    SolarisLib.Settings.Theme
+	                ]
+	
+	            if theme then
+	                SFrame.BackgroundColor3 =
+	                    theme.MainFrame
+	
+	                SFrame.TopBar.ImageColor3 =
+	                    theme.TopBar
+	
+	                SFrame.TopBar.CloseBtn.Ico.ImageColor3 =
+	                    theme.TextColor
+	
+	                SFrame.TopBar.TopFrameTitle.TextColor3 =
+	                    theme.TextColor
+	
+	                SFrame.TabHolder.BackgroundColor3 =
+	                    theme.TopBar
+	            end
+	        end
+	    end)
+	
+	    function Settings:Tab(text)
+	        local Tab = TabPreset:Clone()
+	        local Container = ContainerPreset:Clone()
+	
+	        Tab.Parent = SFrame.TabHolder
+	        Tab.Text = text
+	        Tab.Size = UDim2.new(
+	            0,
+	            Tab.TextBounds.X,
+	            1,
+	            0
+	        )
+	
+	        Container.Parent = SFrame.ContainerFolder
+	        Container.Visible = false
+	
+	        if firstTab then
+	            Tab.TextTransparency = 0
+	            Container.Visible = true
+	            firstTab = false
+	        end
+	
+	        Tab.MouseButton1Click:Connect(function()
+	            for _, object in ipairs(
+	                SFrame.TabHolder:GetChildren()
+	            ) do
+	                if object.Name == "Tab" then
+	                    object.TextTransparency = 0.4
+	                end
+	            end
+	
+	            for _, object in ipairs(
+	                SFrame.ContainerFolder:GetChildren()
+	            ) do
+	                if object.Name == "Container" then
+	                    object.Visible = false
+	                end
+	            end
+	
+	            Tab.TextTransparency = 0
+	            Container.Visible = true
+	        end)
+	
+	        local TabHold = {}
+	
+	        function TabHold:ToggleSetting(
+	            title,
+	            description,
+	            default,
+	            path
+	        )
+	            local value =
+	                SolarisLib.Settings[path]
+	
+	            if value == nil then
+	                value = default
+	            end
+	
+	            local Toggle = TogglePreset:Clone()
+	
+	            Toggle.Parent = Container
+	            Toggle.Title.Text = title
+	            Toggle.Desc.Text = description
+	
+	            local function TweenValue(newValue)
+	                TweenService:Create(
+	                    Toggle.ToggleFrame
+	                        .ToggleToggled.ToggleIco,
+	                    TweenInfo.new(
+	                        0.2,
+	                        Enum.EasingStyle.Quad,
+	                        Enum.EasingDirection.Out
+	                    ),
+	                    {
+	                        ImageTransparency =
+	                            newValue and 0 or 1
+	                    }
+	                ):Play()
+	
+	                TweenService:Create(
+	                    Toggle.ToggleFrame
+	                        .ToggleToggled.ToggleIco,
+	                    TweenInfo.new(
+	                        0.2,
+	                        Enum.EasingStyle.Quad,
+	                        Enum.EasingDirection.Out
+	                    ),
+	                    {
+	                        Size = newValue
+	                            and UDim2.new(1, -2, 1, -2)
+	                            or UDim2.new(1, -6, 1, -6)
+	                    }
+	                ):Play()
+	            end
+	
+	            local function SetValue(newValue)
+	                value = newValue
+	                SolarisLib.Settings[path] = value
+	
+	                TweenValue(value)
+	                SaveSettings()
+	            end
+	
+	            TweenValue(value)
+	
+	            Toggle.MouseButton1Click:Connect(function()
+	                SetValue(not value)
+	            end)
+	
+	            task.spawn(function()
+	                while Toggle.Parent do
+	                    task.wait(0.1)
+	
+	                    local theme =
+	                        SolarisLib.Themes[
+	                            SolarisLib.Settings.Theme
+	                        ]
+	
+	                    if theme then
+	                        Toggle.ToggleFrame
+	                            .ToggleToggled
+	                            .BackgroundColor3 =
+	                            value
+	                            and theme.ToggleToggled
+	                            or theme.Toggle
+	
+	                        Toggle.ToggleFrame
+	                            .BackgroundColor3 =
+	                            value
+	                            and theme.ToggleToggled
+	                            or theme.ToggleFrame
+	
+	                        Toggle.Title.TextColor3 =
+	                            theme.TextColor
+	                    end
+	                end
+	            end)
+	        end
+	
+	        function TabHold:BindSetting(
+	            title,
+	            description,
+	            default,
+	            path
+	        )
+	            local value =
+	                SolarisLib.Settings[path] or default
+	
+	            local Bind = BindPreset:Clone()
+	
+	            Bind.Parent = Container
+	            Bind.Title.Text = title
+	            Bind.Desc.Text = description
+	
+	            local function SetValue(newValue)
+	                closebindbinding = false
+	
+	                value = newValue or value
+	                value = value.Name or value
+	
+	                Bind.BText.Text = value
+	                SolarisLib.Settings[path] = value
+	
+	                SaveSettings()
+	            end
+	
+	            SetValue(value)
+	
+	            Bind.InputEnded:Connect(function(input)
+	                if input.UserInputType
+	                    == Enum.UserInputType.MouseButton1 then
+	
+	                    if closebindbinding then
+	                        return
+	                    end
+	
+	                    closebindbinding = true
+	                    Bind.BText.Text = "..."
+	                end
+	            end)
+	
+	            UserInputService.InputBegan:Connect(function(input)
+	                if UserInputService:GetFocusedTextBox() then
+	                    return
+	                end
+	
+	                if not closebindbinding then
+	                    return
+	                end
+	
+	                local key
+	
+	                if not CheckKey(
+	                    BlacklistedKeys,
+	                    input.KeyCode
+	                ) then
+	                    key = input.KeyCode
+	                end
+	
+	                if not key
+	                    and CheckKey(
+	                        WhitelistedMouse,
+	                        input.UserInputType
+	                    ) then
+	
+	                    key = input.UserInputType
+	                end
+	
+	                SetValue(key or value)
+	            end)
+	
+	            task.spawn(function()
+	                while Bind.Parent do
+	                    task.wait(0.1)
+	
+	                    local theme =
+	                        SolarisLib.Themes[
+	                            SolarisLib.Settings.Theme
+	                        ]
+	
+	                    if theme then
+	                        Bind.Desc.TextColor3 =
+	                            theme.TextColor
+	
+	                        Bind.BText.TextColor3 =
+	                            theme.TextColor
+	
+	                        Bind.Title.TextColor3 =
+	                            theme.TextColor
+	                    end
+	                end
+	            end)
+	        end
+	
+	        function TabHold:Dropdown(
+	            title,
+	            description,
+	            list,
+	            default,
+	            path
+	        )
+	            local opened = false
+	            local value =
+	                SolarisLib.Settings[path] or default
+	
+	            local Dropdown =
+	                DropdownPreset:Clone()
+	
+	            Dropdown.Parent = Container
+	            Dropdown.Title.Text = title
+	            Dropdown.Desc.Text = description
+	            Dropdown.Main.Current.Text =
+	                tostring(value)
+	
+	            local function UpdateSize()
+	                Dropdown.Main.Holder.Visible = opened
+	
+	                Dropdown.Main.Holder.Size =
+	                    opened
+	                    and UDim2.new(
+	                        1,
+	                        0,
+	                        0,
+	                        Dropdown.Main.Holder
+	                            .UIListLayout
+	                            .AbsoluteContentSize.Y
+	                    )
+	                    or UDim2.new(1, 0, 0, 0)
+	
+	                if opened then
+	                    local totalSize =
+	                        Dropdown.Main.Holder
+	                            .UIListLayout
+	                            .AbsoluteContentSize.Y
+	                        + Container.UIListLayout
+	                            .AbsoluteContentSize.Y
+	
+	                    if totalSize > 190 then
+	                        Container.CanvasSize =
+	                            UDim2.new(
+	                                0,
+	                                0,
+	                                0,
+	                                totalSize
+	                            )
+	                    end
+	                else
+	                    Container.CanvasSize =
+	                        UDim2.new(
+	                            0,
+	                            0,
+	                            0,
+	                            Container.UIListLayout
+	                                .AbsoluteContentSize.Y
+	                        )
+	                end
+	
+	                TweenService:Create(
+	                    Dropdown.Main.Ico,
+	                    TweenInfo.new(
+	                        0.15,
+	                        Enum.EasingStyle.Quad,
+	                        Enum.EasingDirection.Out
+	                    ),
+	                    {
+	                        Rotation =
+	                            opened and 180 or 0
+	                    }
+	                ):Play()
+	            end
+	
+	            Dropdown.InputEnded:Connect(function(input)
+	                if input.UserInputType
+	                    == Enum.UserInputType.MouseButton1 then
+	
+	                    opened = not opened
+	                    UpdateSize()
+	                end
+	            end)
+	
+	            for _, option in ipairs(list) do
+	                local Option =
+	                    OptionPreset:Clone()
+	
+	                Option.Parent =
+	                    Dropdown.Main.Holder
+	
+	                Option.Text = tostring(option)
+	
+	                Option.MouseButton1Click:Connect(function()
+	                    value = option
+	                    SolarisLib.Settings[path] = value
+	
+	                    Dropdown.Main.Current.Text =
+	                        tostring(value)
+	
+	                    SaveSettings()
+	                end)
+	
+	                task.spawn(function()
+	                    while Option.Parent do
+	                        task.wait(0.1)
+	
+	                        local theme =
+	                            SolarisLib.Themes[
+	                                SolarisLib.Settings.Theme
+	                            ]
+	
+	                        if theme then
+	                            Option.TextColor3 =
+	                                theme.TextColor
+	                        end
+	                    end
+	                end)
+	            end
+	
+	            task.spawn(function()
+	                while Dropdown.Parent do
+	                    task.wait(0.1)
+	
+	                    local theme =
+	                        SolarisLib.Themes[
+	                            SolarisLib.Settings.Theme
+	                        ]
+	
+	                    if theme then
+	                        Dropdown.Main.ImageColor3 =
+	                            theme.TopBar
+	
+	                        Dropdown.Main.Holder.ImageColor3 =
+	                            theme.TopBar
+	                    end
+	                end
+	            end)
+	        end
+	
+	        return TabHold
+	    end
+	
+	    local general = Settings:Tab("General")
+	
+	    general:ToggleSetting(
+	        "Show Music On Launch",
+	        "Shows the music menu when you load Solaris.",
+	        false,
+	        "ShowMusicOnLaunch"
+	    )
+	
+	    general:BindSetting(
+	        "Close Bind",
+	        "Hides/Shows the main window when pressed.",
+	        Enum.KeyCode.RightControl,
+	        "CloseBind"
+	    )
+	
+	    local appearance = Settings:Tab("Appearance")
+	
+	    appearance:Dropdown(
+	        "Theme",
+	        "The look of the user interface",
+	        {
+	            "Default",
+	            "Discord",
+	            "Red",
+	            "Green",
+	            "Blue"
+	        },
+	        "Default",
+	        "Theme"
+	    )
+	end
+	
     MusicConstructor()
     SettingsConstructor()
 
