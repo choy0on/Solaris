@@ -278,16 +278,16 @@ function SolarisLib:New(Config)
         MusicFrame.Parent = Solaris
         MusicFrame.ZIndex = 5
         MusicFrame.Visible = SolarisLib.Settings.ShowMusicOnLaunch
-        MusicFrame.Frame.Title.Text = "Not Playing"
-        MusicFrame.Frame.Progress.ProgressFrame.Size = UDim2.new(0,0,1,0)
-        MusicFrame.Frame.AddBtn.AutoButtonColor = false
+        MusicFrame.Title.Text = "Not Playing"
+        MusicFrame.Progress.ProgressFrame.Size = UDim2.new(0,0,1,0)
+        MusicFrame.AddBtn.AutoButtonColor = false
 
-        MakeDraggable(MusicFrame.Frame.TopBar,MusicFrame)
-        MusicFrame.Frame.TopBar.CloseBtn.MouseButton1Click:Connect(function()
+        MakeDraggable(MusicFrame.TopBar,MusicFrame)
+        MusicFrame.TopBar.CloseBtn.MouseButton1Click:Connect(function()
             MusicFrame.Visible = false
         end)
-        MusicFrame.Frame.TopBar.CloseBtn.MouseEnter:Connect(function() TweenService:Create(MusicFrame.Frame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0}):Play() end)
-        MusicFrame.Frame.TopBar.CloseBtn.MouseLeave:Connect(function() TweenService:Create(MusicFrame.Frame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0.4}):Play() end)
+        MusicFrame.TopBar.CloseBtn.MouseEnter:Connect(function() TweenService:Create(MusicFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0}):Play() end)
+        MusicFrame.TopBar.CloseBtn.MouseLeave:Connect(function() TweenService:Create(MusicFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0.4}):Play() end)
         MusicBtn.MouseButton1Click:Connect(function()
             MusicFrame.Visible = not MusicFrame.Visible
             MFrame.TopBar.ButtonHolder.MenuBtn.MenuFrame.Visible = false 
@@ -316,12 +316,12 @@ function SolarisLib:New(Config)
             playing = true
             Sound.SoundId = "rbxassetid://" .. id
             Sound:Resume()
-            MusicFrame.Frame.Play.Image = "http://www.roblox.com/asset/?id=6026663719"
-            MusicFrame.Frame.Title.Text = title
+            MusicFrame.Play.Image = "http://www.roblox.com/asset/?id=6026663719"
+            MusicFrame.Title.Text = title
         end    
 
         local function RefreshList(list)
-            for i,v in next, MusicFrame.Frame.MusicList.Scroll:GetChildren() do
+            for i,v in next, MusicFrame.MusicList.Scroll:GetChildren() do
                 if v.Name == "Btn" then
                     v:Destroy()
                 end    
@@ -330,7 +330,7 @@ function SolarisLib:New(Config)
                 local success, info = pcall(MarketplaceService.GetProductInfo, MarketplaceService, v)
                 if success and info.AssetTypeId == 3 then
                     local Btn = MusicPreset:Clone()
-                    Btn.Parent = MusicFrame.Frame.MusicList.Scroll
+                    Btn.Parent = MusicFrame.MusicList.Scroll
                     Btn.Title.Text = info.Name
 
                     Btn.MouseButton1Click:Connect(function()
@@ -350,14 +350,14 @@ function SolarisLib:New(Config)
             end    
         end 
         
-        MusicFrame.Frame.Play.MouseButton1Click:Connect(function()
+        MusicFrame.Play.MouseButton1Click:Connect(function()
             playing = not playing
             if playing then Sound:Pause() else Sound:Resume() end
-            MusicFrame.Frame.Play.Image = playing and "http://www.roblox.com/asset/?id=6026663699" or "http://www.roblox.com/asset/?id=6026663719"
+            MusicFrame.Play.Image = playing and "http://www.roblox.com/asset/?id=6026663699" or "http://www.roblox.com/asset/?id=6026663719"
         end)
 
-        MusicFrame.Frame.AddBtn.MouseButton1Click:Connect(function()
-            local id = MusicFrame.Frame.AddSong.Text
+        MusicFrame.AddBtn.MouseButton1Click:Connect(function()
+            local id = MusicFrame.AddSong.Text
             if not table.find(Sounds, id) then
                 table.insert(Sounds, id)
                 Save()
@@ -365,11 +365,11 @@ function SolarisLib:New(Config)
             end    
         end)
 
-        MusicFrame.Frame.AddBtn.MouseEnter:Connect(function()
+        MusicFrame.AddBtn.MouseEnter:Connect(function()
             abuttonhold = true
         end)
 
-        MusicFrame.Frame.AddBtn.MouseLeave:Connect(function()
+        MusicFrame.AddBtn.MouseLeave:Connect(function()
             abuttonhold = false
         end)
 
@@ -386,22 +386,22 @@ function SolarisLib:New(Config)
             local timemaxmins = math.floor(timemax / 60)
             if string.len(timemaxsecs) < 2 then timemaxsecs = "0" .. timemaxsecs end
             if string.len(timemaxmins) < 2 then timemaxmins = "0" .. timemaxmins end
-            MusicFrame.Frame.Timer1.Text = timemins .. ":" .. timesecs
-            MusicFrame.Frame.Timer2.Text = timemaxmins .. ":" .. timemaxsecs
-            MusicFrame.Frame.Progress.ProgressFrame.Size = UDim2.new(Sound.TimePosition / Sound.TimeLength,0,1,0)
+            MusicFrame.Timer1.Text = timemins .. ":" .. timesecs
+            MusicFrame.Timer2.Text = timemaxmins .. ":" .. timemaxsecs
+            MusicFrame.Progress.ProgressFrame.Size = UDim2.new(Sound.TimePosition / Sound.TimeLength,0,1,0)
         end)
 
         
         spawn(function()
             while wait() do
-                MusicFrame.Frame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].MainFrame
-                MusicFrame.Frame.TopBar.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                MusicFrame.Frame.TopBar.CloseBtn.Ico.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                MusicFrame.Frame.MusicList.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                MusicFrame.Frame.AddBtn.BackgroundColor3 = abuttonhold and SolarisLib.Themes[SolarisLib.Settings.Theme].ButtonHold or SolarisLib.Themes[SolarisLib.Settings.Theme].Button
-                MusicFrame.Frame.Progress.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Slider
-                MusicFrame.Frame.Progress.ProgressFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].SliderInc
-                MusicFrame.Frame.AddSong.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Textbox
+                MusicFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].MainFrame
+                MusicFrame.TopBar.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
+                MusicFrame.TopBar.CloseBtn.Ico.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
+                MusicFrame.MusicList.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
+                MusicFrame.AddBtn.BackgroundColor3 = abuttonhold and SolarisLib.Themes[SolarisLib.Settings.Theme].ButtonHold or SolarisLib.Themes[SolarisLib.Settings.Theme].Button
+                MusicFrame.Progress.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Slider
+                MusicFrame.Progress.ProgressFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].SliderInc
+                MusicFrame.AddSong.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Textbox
             end
         end)
     end  
