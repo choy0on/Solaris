@@ -271,361 +271,416 @@ function SolarisLib:New(Config)
 
 
     function MusicConstructor()
-        local abuttonhold = false
-        local playing = false
-        local MarketplaceService = game:GetService("MarketplaceService")
-        local MusicFrame, MusicPreset = game:GetObjects("rbxassetid://7296373622")[1], game:GetObjects("rbxassetid://7296615234")[1]
-        MusicFrame.Parent = Solaris
-        MusicFrame.ZIndex = 5
-        MusicFrame.Visible = SolarisLib.Settings.ShowMusicOnLaunch
-        MusicFrame.Title.Text = "Not Playing"
-        MusicFrame.Progress.ProgressFrame.Size = UDim2.new(0,0,1,0)
-        MusicFrame.AddBtn.AutoButtonColor = false
-
-        MakeDraggable(MusicFrame.TopBar,MusicFrame)
-        MusicFrame.TopBar.CloseBtn.MouseButton1Click:Connect(function()
-            MusicFrame.Visible = false
-        end)
-        MusicFrame.TopBar.CloseBtn.MouseEnter:Connect(function() TweenService:Create(MusicFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0}):Play() end)
-        MusicFrame.TopBar.CloseBtn.MouseLeave:Connect(function() TweenService:Create(MusicFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0.4}):Play() end)
-        MusicBtn.MouseButton1Click:Connect(function()
-            MusicFrame.Visible = not MusicFrame.Visible
-            MFrame.TopBar.ButtonHolder.MenuBtn.MenuFrame.Visible = false 
-        end)
-
-        local Sound = Instance.new("Sound")
-        Sound.Name = "Sound"
-        Sound.Parent = MusicFrame
-        Sound.Volume = 3
-        Sound:Stop()
-
-        local Sounds = {}
-        if not isfile(Config.FolderToSave .. "/music.txt") then writefile(Config.FolderToSave .. "/music.txt", tostring(http:JSONEncode({}))) end
-        Sounds = http:JSONDecode(readfile(Config.FolderToSave .. "/music.txt"))
-
-        function Save()
-            local content = {}
-            for i,v in pairs(Sounds) do
-                content[i] = v
-            end
-            writefile(Config.FolderToSave .. "/music.txt", tostring(http:JSONEncode(content)))
-        end    
-
-        local function PlaySong(id, title)
-            Sound:Stop()
-            playing = true
-            Sound.SoundId = "rbxassetid://" .. id
-            Sound:Resume()
-            MusicFrame.Play.Image = "http://www.roblox.com/asset/?id=6026663719"
-            MusicFrame.Title.Text = title
-        end    
-
-        local function RefreshList(list)
-            for i,v in next, MusicFrame.MusicList.Scroll:GetChildren() do
-                if v.Name == "Btn" then
-                    v:Destroy()
-                end    
-            end
-            for i,v in next, list do
-                local success, info = pcall(MarketplaceService.GetProductInfo, MarketplaceService, v)
-                if success and info.AssetTypeId == 3 then
-                    local Btn = MusicPreset:Clone()
-                    Btn.Parent = MusicFrame.MusicList.Scroll
-                    Btn.Title.Text = info.Name
-
-                    Btn.MouseButton1Click:Connect(function()
-                        PlaySong(v, info.Name)
-                    end)
-
-                    Btn.Delete.MouseButton1Click:Connect(function()
-                        for g,c in next, Sounds do
-                            if c == v then
-                                table.remove(Sounds, g)
-                            end    
-                        end    
-                        Save()
-                        Btn:Destroy()   
-                    end)
-                end
-            end    
-        end 
-        
-        MusicFrame.Play.MouseButton1Click:Connect(function()
-            playing = not playing
-            if playing then Sound:Pause() else Sound:Resume() end
-            MusicFrame.Play.Image = playing and "http://www.roblox.com/asset/?id=6026663699" or "http://www.roblox.com/asset/?id=6026663719"
-        end)
-
-        MusicFrame.AddBtn.MouseButton1Click:Connect(function()
-            local id = MusicFrame.AddSong.Text
-            if not table.find(Sounds, id) then
-                table.insert(Sounds, id)
-                Save()
-                RefreshList(Sounds)
-            end    
-        end)
-
-        MusicFrame.AddBtn.MouseEnter:Connect(function()
-            abuttonhold = true
-        end)
-
-        MusicFrame.AddBtn.MouseLeave:Connect(function()
-            abuttonhold = false
-        end)
-
-        RefreshList(Sounds)
-
-        game:GetService("RunService").RenderStepped:Connect(function()
-            local time = math.floor(Sound.TimePosition)
-            local timesecs = time % 60
-            local timemins = math.floor(time / 60)
-            if string.len(timesecs) < 2 then timesecs = "0" .. timesecs end
-            if string.len(timemins) < 2 then timemins = "0" .. timemins end
-            local timemax = math.floor(Sound.TimeLength)
-            local timemaxsecs = timemax % 60
-            local timemaxmins = math.floor(timemax / 60)
-            if string.len(timemaxsecs) < 2 then timemaxsecs = "0" .. timemaxsecs end
-            if string.len(timemaxmins) < 2 then timemaxmins = "0" .. timemaxmins end
-            MusicFrame.Timer1.Text = timemins .. ":" .. timesecs
-            MusicFrame.Timer2.Text = timemaxmins .. ":" .. timemaxsecs
-            MusicFrame.Progress.ProgressFrame.Size = UDim2.new(Sound.TimePosition / Sound.TimeLength,0,1,0)
-        end)
-
-        
-        spawn(function()
-            while wait() do
-                MusicFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].MainFrame
-                MusicFrame.TopBar.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                MusicFrame.TopBar.CloseBtn.Ico.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                MusicFrame.MusicList.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                MusicFrame.AddBtn.BackgroundColor3 = abuttonhold and SolarisLib.Themes[SolarisLib.Settings.Theme].ButtonHold or SolarisLib.Themes[SolarisLib.Settings.Theme].Button
-                MusicFrame.Progress.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Slider
-                MusicFrame.Progress.ProgressFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].SliderInc
-                MusicFrame.AddSong.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].Textbox
-            end
-        end)
-    end  
-
-    function SettingsConstructor()
-        local Settings, SettingsFrame, TabPreset, ContainerPreset, TogglePreset, BindPreset, DropdownPreset, OptionPreset = {}, game:GetObjects("rbxassetid://7167491516")[1], game:GetObjects("rbxassetid://7177524915")[1], game:GetObjects("rbxassetid://7203599409")[1], game:GetObjects("rbxassetid://7208643984")[1], game:GetObjects("rbxassetid://7219277948")[1], game:GetObjects("rbxassetid://7435055269")[1], game:GetObjects("rbxassetid://7435032496")[1]
-        local fs = true
-        local SFrame = SettingsFrame.Main
-        SettingsFrame.Parent = MFrame
-        SFrame.TopBar.CloseBtn.MouseEnter:Connect(function() TweenService:Create(SFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0}):Play() end)
-        SFrame.TopBar.CloseBtn.MouseLeave:Connect(function() TweenService:Create(SFrame.TopBar.CloseBtn.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency = 0.4}):Play() end)
-        SettingsBtn.MouseButton1Click:Connect(function()
-            SettingsFrame.Visible = not SettingsFrame.Visible
-            MFrame.TopBar.ButtonHolder.MenuBtn.MenuFrame.Visible = false 
-        end)
-        SFrame.TopBar.CloseBtn.MouseButton1Click:Connect(function()
-            SettingsFrame.Visible = false
-        end)
-
-        function SaveSettings()
-            local content = {}
-            for i,v in pairs(SolarisLib.Settings) do
-                content[i] = v
-            end
-            writefile(Config.FolderToSave .. "/settings.txt", tostring(http:JSONEncode(content)))
-        end    
-
-        
-        spawn(function()
-            while wait() do
-                SFrame.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].MainFrame
-                SFrame.TopBar.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                SFrame.TopBar.CloseBtn.Ico.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                SFrame.TopBar.TopFrameTitle.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                SFrame.TabHolder.BackgroundColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-
-            end
-        end)
-
-        function Settings:Tab(text)
-            local Tab = TabPreset:Clone()
-            local Container = ContainerPreset:Clone()
-            Tab.Parent = SFrame.TabHolder
-            Tab.Text = text
-            Tab.Size = UDim2.new(0,Tab.TextBounds.X,1,0)
-            Container.Parent = SFrame.ContainerFolder
-            Container.Visible = false
-
-            if fs then
-                Tab.TextTransparency = 0
-                Container.Visible = true
-                fs = false
-            end    
-
-            Tab.MouseButton1Click:Connect(function()
-                for i,v in next, SFrame.TabHolder:GetChildren() do
-                    if v.Name == "Tab" then
-                        v.TextTransparency = 0.4
-                    end    
-                end      
-                for i,v in next, SFrame.ContainerFolder:GetChildren() do
-                    if v.Name == "Container" then
-                        v.Visible = false
-                    end    
-                end      
-                Tab.TextTransparency = 0      
-                Container.Visible = true
-            end)
-            local TabHold = {}
-            function TabHold:ToggleSetting(title, desc, def, path)
-                local value = SolarisLib.Settings[path] or def
-                local Toggle = TogglePreset:Clone()
-                Toggle.Parent = Container
-                Toggle.Title.Text = title
-                Toggle.Desc.Text = desc
-
-                local function Tween(val)
-                    TweenService:Create(Toggle.ToggleFrame.ToggleToggled.ToggleIco,TweenInfo.new(.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{ImageTransparency= val and 0 or 1}):Play()
-                    TweenService:Create(Toggle.ToggleFrame.ToggleToggled.ToggleIco,TweenInfo.new(.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Size= val and UDim2.new(1,-2,1,-2) or UDim2.new(1,-6,1,-6)}):Play()
-                end    
-
-                local function SetValue(val)
-                    Tween(val)
-                    SolarisLib.Settings[path] = val
-                    value = val
-                    SaveSettings()
-                end    
-
-                Tween(value)
-
-                Toggle.MouseButton1Click:Connect(function()
-                    SetValue(not value)     
-                end)
-
-                spawn(function()
-                    while wait() do
-                        Toggle.ToggleFrame.ToggleToggled.BackgroundColor3 = value and SolarisLib.Themes[SolarisLib.Settings.Theme].ToggleToggled or SolarisLib.Themes[SolarisLib.Settings.Theme].MainFrame
-                        Toggle.ToggleFrame.BackgroundColor3 = value and SolarisLib.Themes[SolarisLib.Settings.Theme].ToggleToggled or SolarisLib.Themes[SolarisLib.Settings.Theme].ToggleFrame
-                        Toggle.Title.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                    end
-                end)
-            end
-            function TabHold:BindSetting(title, desc, def, path)
-                local value = SolarisLib.Settings[path] or def
-                local Bind = BindPreset:Clone()
-                Bind.Parent = Container
-                Bind.Title.Text = title
-                Bind.Desc.Text = desc
-
-                function SetValue(val)
-                    closebindbinding = false
-                    value = val or value
-                    value = value.Name or value
-                    Bind.BText.Text = value
-                    SolarisLib.Settings[path] = value
-                    SaveSettings()
-                end    
-                SetValue(value)
-
-                Bind.InputEnded:Connect(function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        if closebindbinding then return end
-                        closebindbinding = true
-                        Bind.BText.Text = "..."
-                    end
-                end)
-
-                UserInputService.InputBegan:Connect(function(Input)
-                    if UserInputService:GetFocusedTextBox() then return end
-                    if closebindbinding then
-                        local Key
-                        pcall(function()
-                            if not CheckKey(BlacklistedKeys, Input.KeyCode) then
-                                Key = Input.KeyCode
-                            end
-                        end)
-                        pcall(function()
-                            if CheckKey(WhitelistedMouse, Input.UserInputType) and not Key then
-                                Key = Input.UserInputType
-                            end
-                        end)
-                        Key = Key or value
-                        SetValue(Key)
-                    end
-                end)
-
-                spawn(function()
-                    while wait() do
-                        Bind.Desc.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                        Bind.BText.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                        Bind.Title.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor
-                    end
-                end)
-            
-            end    
-            function TabHold:Dropdown(title, desc, list, def, path)
-                local opened = false
-                local value = SolarisLib.Settings[path] or def
-                local Dropdown = DropdownPreset:Clone()
-                Dropdown.Parent = Container
-                Dropdown.Title.Text = title
-                Dropdown.Desc.Text = desc
-                Dropdown.Main.Current.Text = value
-
-                function Toggle()
-                    Dropdown.Main.Holder.Visible = opened
-                    Dropdown.Main.Holder.Size = opened and UDim2.new(1,0,0,Dropdown.Main.Holder.UIListLayout.AbsoluteContentSize.Y) or UDim2.new(1,0,0,0)
-                    if opened then
-                        if (Dropdown.Main.Holder.UIListLayout.AbsoluteContentSize.Y + Container.UIListLayout.AbsoluteContentSize.Y) > 190 then
-                            Container.CanvasSize = UDim2.new(0,0,0,Dropdown.Main.Holder.UIListLayout.AbsoluteContentSize.Y + Container.UIListLayout.AbsoluteContentSize.Y)
-                        end    
-                    else
-                        Container.CanvasSize = UDim2.new(0,0,0,Container.UIListLayout.AbsoluteContentSize.Y) 
-                    end
-                    TweenService:Create(Dropdown.Main.Ico,TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),{Rotation = opened and 180 or 0}):Play()
-                end   
-                
-                Dropdown.InputEnded:Connect(function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        opened = not opened
-                        Toggle()
-                    end
-                end)
-
-                local function AddOptions(opts)
-                    for _,option in pairs(opts) do
-                        local Option = OptionPreset:Clone()
-                        Option.Parent = Dropdown.Main.Holder
-                        Option.Text = option
-
-                        Option.MouseButton1Click:Connect(function()
-                            value = option
-                            SolarisLib.Settings[path] = value
-                            Dropdown.Main.Current.Text = value
-                            SaveSettings()
-                        end)
-
-                        spawn(function()
-                            while wait() do
-                               Option.TextColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TextColor       
-                            end
-                        end)
-                    end   
-                end    
-
-                spawn(function()
-                    while wait() do
-                        Dropdown.Main.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                        Dropdown.Main.Holder.ImageColor3 = SolarisLib.Themes[SolarisLib.Settings.Theme].TopBar
-                    end
-                end)
-                AddOptions(list)
-            end
-            return TabHold
-        end   
-        
-        local general = Settings:Tab("General")
-        general:ToggleSetting("Show Music On Launch", "Shows the music menu when you load Snow Hub", true, "ShowMusicOnLaunch")
-        general:BindSetting("Close Bind", "Hides/Shows the main window when pressed.", Enum.KeyCode.RightControl, "CloseBind")
-        
-        local appearance = Settings:Tab("Appearance")
-        appearance:Dropdown("Theme", "The look of the user interface", {"Default", "Discord", "Red", "Green", "Blue"}, "Default", "Theme")
-
-    end 
+	    local abuttonhold = false
+	    local playing = false
+	
+	    local MarketplaceService = game:GetService("MarketplaceService")
+	
+	    local MusicHolder = game:GetObjects(
+	        "rbxassetid://7296373622"
+	    )[1]
+	
+	    local MusicPreset = game:GetObjects(
+	        "rbxassetid://7296615234"
+	    )[1]
+	
+	    if not MusicHolder then
+	        error("MusicFrameHolder 에셋을 불러오지 못했습니다.")
+	    end
+	
+	    if not MusicPreset then
+	        error("MusicPreset 에셋을 불러오지 못했습니다.")
+	    end
+	
+	    -- 에셋의 계층 구조가 달라도 이름으로 내부 요소를 찾습니다.
+	    local function requireDescendant(root, name)
+	        local object = root:FindFirstChild(name, true)
+	
+	        if not object then
+	            error(
+	                string.format(
+	                    'Music UI에서 "%s"을(를) 찾지 못했습니다. Root: %s',
+	                    name,
+	                    root:GetFullName()
+	                )
+	            )
+	        end
+	
+	        return object
+	    end
+	
+	    MusicHolder.Parent = Solaris
+	    MusicHolder.Visible = SolarisLib.Settings.ShowMusicOnLaunch
+	
+	    pcall(function()
+	        MusicHolder.ZIndex = 5
+	    end)
+	
+	    local TopBar = requireDescendant(MusicHolder, "TopBar")
+	    local CloseBtn = requireDescendant(TopBar, "CloseBtn")
+	    local CloseIco = CloseBtn:FindFirstChild("Ico", true)
+	
+	    local Title = requireDescendant(MusicHolder, "Title")
+	    local Progress = requireDescendant(MusicHolder, "Progress")
+	    local ProgressFrame = requireDescendant(Progress, "ProgressFrame")
+	    local AddBtn = requireDescendant(MusicHolder, "AddBtn")
+	    local AddSong = requireDescendant(MusicHolder, "AddSong")
+	    local PlayBtn = requireDescendant(MusicHolder, "Play")
+	    local MusicList = requireDescendant(MusicHolder, "MusicList")
+	    local Scroll = requireDescendant(MusicList, "Scroll")
+	    local Timer1 = requireDescendant(MusicHolder, "Timer1")
+	    local Timer2 = requireDescendant(MusicHolder, "Timer2")
+	
+	    -- TopBar와 같은 실제 음악 창 내부 프레임
+	    local MusicFrame = TopBar.Parent or MusicHolder
+	
+	    Title.Text = "Not Playing"
+	    ProgressFrame.Size = UDim2.new(0, 0, 1, 0)
+	    AddBtn.AutoButtonColor = false
+	
+	    MakeDraggable(TopBar, MusicHolder)
+	
+	    CloseBtn.MouseButton1Click:Connect(function()
+	        MusicHolder.Visible = false
+	    end)
+	
+	    if CloseIco then
+	        CloseBtn.MouseEnter:Connect(function()
+	            TweenService:Create(
+	                CloseIco,
+	                TweenInfo.new(
+	                    0.15,
+	                    Enum.EasingStyle.Quad,
+	                    Enum.EasingDirection.Out
+	                ),
+	                {ImageTransparency = 0}
+	            ):Play()
+	        end)
+	
+	        CloseBtn.MouseLeave:Connect(function()
+	            TweenService:Create(
+	                CloseIco,
+	                TweenInfo.new(
+	                    0.15,
+	                    Enum.EasingStyle.Quad,
+	                    Enum.EasingDirection.Out
+	                ),
+	                {ImageTransparency = 0.4}
+	            ):Play()
+	        end)
+	    end
+	
+	    MusicBtn.MouseButton1Click:Connect(function()
+	        MusicHolder.Visible = not MusicHolder.Visible
+	        MFrame.TopBar.ButtonHolder.MenuBtn.MenuFrame.Visible = false
+	    end)
+	
+	    local Sound = Instance.new("Sound")
+	    Sound.Name = "Sound"
+	    Sound.Parent = MusicHolder
+	    Sound.Volume = 3
+	    Sound:Stop()
+	
+	    local musicFile =
+	        Config.FolderToSave .. "/music.txt"
+	
+	    local Sounds = {}
+	
+	    if not isfile(musicFile) then
+	        writefile(
+	            musicFile,
+	            http:JSONEncode({})
+	        )
+	    end
+	
+	    local readSuccess, decodedSounds = pcall(function()
+	        return http:JSONDecode(readfile(musicFile))
+	    end)
+	
+	    if readSuccess and type(decodedSounds) == "table" then
+	        Sounds = decodedSounds
+	    else
+	        Sounds = {}
+	
+	        writefile(
+	            musicFile,
+	            http:JSONEncode(Sounds)
+	        )
+	    end
+	
+	    local function Save()
+	        local success, saveError = pcall(function()
+	            writefile(
+	                musicFile,
+	                http:JSONEncode(Sounds)
+	            )
+	        end)
+	
+	        if not success then
+	            warn("Music 목록 저장 실패:", saveError)
+	        end
+	    end
+	
+	    local PLAY_IMAGE =
+	        "http://www.roblox.com/asset/?id=6026663699"
+	
+	    local PAUSE_IMAGE =
+	        "http://www.roblox.com/asset/?id=6026663719"
+	
+	    local function PlaySong(id, title)
+	        local numericId =
+	            tostring(id):match("%d+")
+	
+	        if not numericId then
+	            warn("잘못된 오디오 ID:", id)
+	            return
+	        end
+	
+	        Sound:Stop()
+	        Sound.SoundId = "rbxassetid://" .. numericId
+	        Sound:Play()
+	
+	        playing = true
+	        PlayBtn.Image = PAUSE_IMAGE
+	        Title.Text = tostring(title or numericId)
+	    end
+	
+	    local function clearMusicButtons()
+	        for _, object in ipairs(Scroll:GetChildren()) do
+	            if object.Name == "Btn" then
+	                object:Destroy()
+	            end
+	        end
+	    end
+	
+	    local function RefreshList(list)
+	        clearMusicButtons()
+	
+	        for _, savedId in ipairs(list) do
+	            local audioId =
+	                tonumber(tostring(savedId):match("%d+"))
+	
+	            if audioId then
+	                local infoSuccess, info = pcall(
+	                    MarketplaceService.GetProductInfo,
+	                    MarketplaceService,
+	                    audioId
+	                )
+	
+	                if infoSuccess
+	                    and info
+	                    and info.AssetTypeId == 3 then
+	
+	                    local Btn = MusicPreset:Clone()
+	                    Btn.Parent = Scroll
+	
+	                    local BtnTitle =
+	                        Btn:FindFirstChild("Title", true)
+	
+	                    local DeleteBtn =
+	                        Btn:FindFirstChild("Delete", true)
+	
+	                    if BtnTitle then
+	                        BtnTitle.Text =
+	                            tostring(info.Name or audioId)
+	                    end
+	
+	                    if Btn:IsA("GuiButton") then
+	                        Btn.MouseButton1Click:Connect(function()
+	                            PlaySong(
+	                                audioId,
+	                                info.Name
+	                            )
+	                        end)
+	                    end
+	
+	                    if DeleteBtn
+	                        and DeleteBtn:IsA("GuiButton") then
+	
+	                        DeleteBtn.MouseButton1Click:Connect(function()
+	                            for index = #Sounds, 1, -1 do
+	                                if tostring(Sounds[index])
+	                                    == tostring(savedId) then
+	
+	                                    table.remove(Sounds, index)
+	                                end
+	                            end
+	
+	                            Save()
+	                            Btn:Destroy()
+	                        end)
+	                    end
+	
+	                    task.spawn(function()
+	                        while Btn.Parent do
+	                            task.wait(0.1)
+	
+	                            local theme =
+	                                SolarisLib.Themes[
+	                                    SolarisLib.Settings.Theme
+	                                ]
+	
+	                            if theme then
+	                                pcall(function()
+	                                    Btn.BackgroundColor3 =
+	                                        theme.Button
+	                                end)
+	
+	                                if BtnTitle then
+	                                    pcall(function()
+	                                        BtnTitle.TextColor3 =
+	                                            theme.TextColor
+	                                    end)
+	                                end
+	                            end
+	                        end
+	                    end)
+	                end
+	            end
+	        end
+	    end
+	
+	    PlayBtn.MouseButton1Click:Connect(function()
+	        if Sound.SoundId == "" then
+	            return
+	        end
+	
+	        playing = not playing
+	
+	        if playing then
+	            Sound:Resume()
+	            PlayBtn.Image = PAUSE_IMAGE
+	        else
+	            Sound:Pause()
+	            PlayBtn.Image = PLAY_IMAGE
+	        end
+	    end)
+	
+	    AddBtn.MouseButton1Click:Connect(function()
+	        local id =
+	            tostring(AddSong.Text):match("%d+")
+	
+	        if not id or id == "" then
+	            warn("올바른 오디오 ID를 입력하세요.")
+	            return
+	        end
+	
+	        if not table.find(Sounds, id) then
+	            table.insert(Sounds, id)
+	            Save()
+	            RefreshList(Sounds)
+	        end
+	    end)
+	
+	    AddBtn.MouseEnter:Connect(function()
+	        abuttonhold = true
+	    end)
+	
+	    AddBtn.MouseLeave:Connect(function()
+	        abuttonhold = false
+	    end)
+	
+	    RefreshList(Sounds)
+	
+	    local renderConnection
+	
+	    renderConnection =
+	        RunService.RenderStepped:Connect(function()
+	
+	        if not MusicHolder.Parent then
+	            renderConnection:Disconnect()
+	            return
+	        end
+	
+	        local currentTime =
+	            math.floor(Sound.TimePosition)
+	
+	        local totalTime =
+	            math.floor(Sound.TimeLength)
+	
+	        Timer1.Text = string.format(
+	            "%02d:%02d",
+	            math.floor(currentTime / 60),
+	            currentTime % 60
+	        )
+	
+	        Timer2.Text = string.format(
+	            "%02d:%02d",
+	            math.floor(totalTime / 60),
+	            totalTime % 60
+	        )
+	
+	        local progressValue = 0
+	
+	        if Sound.TimeLength > 0 then
+	            progressValue = math.clamp(
+	                Sound.TimePosition / Sound.TimeLength,
+	                0,
+	                1
+	            )
+	        end
+	
+	        ProgressFrame.Size =
+	            UDim2.new(progressValue, 0, 1, 0)
+	    end)
+	
+	    task.spawn(function()
+	        while MusicHolder.Parent do
+	            task.wait(0.1)
+	
+	            local theme =
+	                SolarisLib.Themes[
+	                    SolarisLib.Settings.Theme
+	                ]
+	
+	            if theme then
+	                pcall(function()
+	                    MusicFrame.BackgroundColor3 =
+	                        theme.MainFrame
+	                end)
+	
+	                pcall(function()
+	                    TopBar.ImageColor3 =
+	                        theme.TopBar
+	                end)
+	
+	                if CloseIco then
+	                    pcall(function()
+	                        CloseIco.ImageColor3 =
+	                            theme.TextColor
+	                    end)
+	                end
+	
+	                pcall(function()
+	                    MusicList.BackgroundColor3 =
+	                        theme.TopBar
+	                end)
+	
+	                pcall(function()
+	                    AddBtn.BackgroundColor3 =
+	                        abuttonhold
+	                        and theme.ButtonHold
+	                        or theme.Button
+	                end)
+	
+	                pcall(function()
+	                    Progress.BackgroundColor3 =
+	                        theme.Slider
+	                end)
+	
+	                pcall(function()
+	                    ProgressFrame.BackgroundColor3 =
+	                        theme.SliderInc
+	                end)
+	
+	                pcall(function()
+	                    AddSong.BackgroundColor3 =
+	                        theme.Textbox
+	                end)
+	            end
+	        end
+	    end)
+	end
     MusicConstructor()
     SettingsConstructor()
 
