@@ -1,5 +1,18 @@
 -- This User Interface Library is brought to you by Solaris Software
 -- This version don't have the solaris notifiers, because the rbxassetid file was deleted
+local CoreGui = game:GetService("CoreGui")
+
+local guiNames = {
+	["dosage's solaris gui"] = true,
+	["notiHolder"] = true
+}
+
+for _, object in ipairs(CoreGui:GetChildren()) do
+	if guiNames[object.Name] then
+		object:Destroy()
+	end
+end
+
 local Solaris = Instance.new("ScreenGui")
 Solaris.Name = "dosage's solaris gui"
 Solaris.Parent = game.CoreGui
